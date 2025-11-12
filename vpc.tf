@@ -12,11 +12,12 @@ resource "aws_vpc" "main" {
     }
   )
 }
-#IGW
-resource "aws_internet_gateway" "gw" {
+
+# IGW
+resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
 
-   tags = merge(
+  tags = merge(
     var.igw_tags,
     local.common_tags,
     {
@@ -42,6 +43,7 @@ resource "aws_subnet" "public" {
   )
 }
 
+
 # Private Subnets
 resource "aws_subnet" "private" {
   count = length(var.private_subnet_cidrs)
@@ -57,6 +59,7 @@ resource "aws_subnet" "private" {
     }
   )
 }
+
 # Database Subnets
 resource "aws_subnet" "database" {
   count = length(var.database_subnet_cidrs)
@@ -73,6 +76,7 @@ resource "aws_subnet" "database" {
   )
 }
 
+
 # Public Route Table
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
@@ -85,6 +89,8 @@ resource "aws_route_table" "public" {
     }
   )
 }
+
+
 # Private Route Table
 resource "aws_route_table" "private" {
   vpc_id = aws_vpc.main.id
@@ -111,12 +117,14 @@ resource "aws_route_table" "database" {
     }
   )
 }
+
 # Public Route
 resource "aws_route" "public" {
   route_table_id            = aws_route_table.public.id
   destination_cidr_block    = "0.0.0.0/0"
   gateway_id = aws_internet_gateway.main.id
 }
+
 # Elastic IP
 resource "aws_eip" "nat" {
   domain   = "vpc"
@@ -129,6 +137,8 @@ resource "aws_eip" "nat" {
     }
   )
 }
+
+
 # NAT gateway
 resource "aws_nat_gateway" "nat" {
   allocation_id = aws_eip.nat.id
@@ -178,4 +188,3 @@ resource "aws_route_table_association" "database" {
   subnet_id      = aws_subnet.database[count.index].id
   route_table_id = aws_route_table.database.id
 }
-
